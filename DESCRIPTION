@@ -1,0 +1,15 @@
+Package: gpw
+Title: Warsaw Stock Exchange playground
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Tomasz",
+           family = "Biegacz",
+           role = c("aut", "cre"),
+           email = "tbiegacz@gmail.com")
+Description: Warsaw Stock Exchange playground.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    readr,
+    dplyr
