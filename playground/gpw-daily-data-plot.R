@@ -23,7 +23,6 @@ plotStockValuesAbsolute <- function(company, startPostion, timespan, timespanUni
   )
 }
 
-args = commandArgs(trailingOnly=TRUE)
 plotStockValuesAbsolute(
   company = '11BIT',
   startPostion = 1,
