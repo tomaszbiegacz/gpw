@@ -7,13 +7,13 @@ Data has been retrieved from <http://bossa.pl/notowania/metastock/>.
 Rebuild sample data set with
 
 ```bash
-Rscript ./playground/gpw-daily-import-sample.R
+./playground/daily-import.R
 ```
 
 This can take a while. Once done plot stock values with
 
 ```bash
-Rscript ./playground/gpw-daily-data-plot.R
+./playground/price-plot.R
 ```
 
 this will create `Rplots.pdf` in current directory.
@@ -25,4 +25,12 @@ Run tests with
 
 ```R
 devtools::test()
+```
+
+## Price change density
+
+To see price change density start with
+
+```bash
+./playground/price-close-rel-density-plot.R
 ```

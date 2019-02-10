@@ -1,12 +1,10 @@
 #!/usr/bin/env Rscript
 
-load("./playground/gpw_daily_sample.rda")
-load("./playground/gpw_daily_sample_timestamps.rda")
-
-plotStockValuesAbsolute <- function(company, startPostion, timespan, timespanUnit) {
+plotStockValuesAbsolute <- function(daily, daily_timestamps,
+                                    company, startPostion, timespan, timespanUnit) {
   lastPosition <- startPostion + timespan
   rows = subset(
-    gpw_daily_sample,
+    daily,
     symbol == company & timestamp_pos >= startPostion & timestamp_pos < lastPosition & timespan == timespanUnit,
     c('timestamp_pos', 'prc_open', 'prc_min', 'prc_max')
   )
@@ -19,11 +17,15 @@ plotStockValuesAbsolute <- function(company, startPostion, timespan, timespanUni
   lines(max, col='red', type = 'l', lty  = 'dashed')
 
   title(
-    main=paste(company, 'agg', timespanUnit, 'days from', names(gpw_daily_sample_timestamps)[startPostion])
+    main=paste(company, 'agg', timespanUnit, 'days from', names(daily_timestamps)[startPostion])
   )
 }
 
+load("./playground/daily.rda")
+load("./playground/daily_timestamps.rda")
+
 plotStockValuesAbsolute(
+  daily, daily_timestamps,
   company = '11BIT',
   startPostion = 1,
   timespan = 30,

@@ -20,7 +20,7 @@ readDailyData <- function (filePath,
                        encoding = 'UTF-8') {
   # Manuals
   # https://github.com/tidyverse/readr/blob/master/R/read_delim.R
-  # https://github.com/tidyverse/readr/blob/05defba0a9fb9ce16ebb2189474e645442c680f7/R/col_types.R
+  # https://github.com/tidyverse/readr/blob/master/R/col_types.R
   result <- as.data.frame(readr::read_csv(
     filePath,
     trim_ws = T,
