@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-plotStockValuesAbsolute <- function(daily, daily_timestamps,
+plotStockValuesAbsolute <- function(daily, dailyTimestamps,
                                     company, startPostion, timespan, timespanUnit) {
   lastPosition <- startPostion + timespan
   rows = subset(
@@ -17,15 +17,14 @@ plotStockValuesAbsolute <- function(daily, daily_timestamps,
   lines(max, col='red', type = 'l', lty  = 'dashed')
 
   title(
-    main=paste(company, 'agg', timespanUnit, 'days from', names(daily_timestamps)[startPostion])
+    main=paste(company, 'agg', timespanUnit, 'days from', strftime(dailyTimestamps[startPostion]))
   )
 }
 
 load("./playground/daily.rda")
-load("./playground/daily_timestamps.rda")
 
 plotStockValuesAbsolute(
-  daily, daily_timestamps,
+  daily, daily@validTimestamps,
   company = '11BIT',
   startPostion = 1,
   timespan = 30,
