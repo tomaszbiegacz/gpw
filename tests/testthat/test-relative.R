@@ -1,23 +1,4 @@
-context("normalize")
-
-getTestDataBasic <- function () {
-  data.frame(
-    timestamp = c(
-      as.POSIXct('2016-01-04'),
-      as.POSIXct('2016-01-05'),
-      as.POSIXct('2016-01-07'),
-      as.POSIXct('2016-01-08'),
-      as.POSIXct('2016-01-07')
-    ),
-    timespan = 1,
-    symbol = c('11BIT','11BIT','11BIT','11BIT','ABCDATA'),
-    prc_open = c(1.75, 71.00, 5.49, 20.20, 3.11),
-    volume = c(1109, 9282, 7611, 145, 9977),
-    prc_close = c(1.83, 70.00, 5.59, 20.20, 3.14),
-    prc_max = c(1.83, 71.00, 5.69, 20.20, 3.14),
-    prc_min = c(1.75, 70.00, 5.16, 20.20, 3.10)
-  )
-}
+context("relative")
 
 getDataValueColums <- function () {
   c('symbol','timestamp_pos','timespan', 'timestamp',
@@ -25,6 +6,42 @@ getDataValueColums <- function () {
     'prc_min', 'prc_min_rel', 'prc_max', 'prc_max_rel',
     'prc_var', 'prc_var_rel'
   )
+}
+
+getTestDataBasic <- function () {
+  data.frame(
+    symbol = c('11BIT','11BIT','11BIT','11BIT','ABCDATA'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-07'),
+      as.POSIXct('2016-01-08'),
+      as.POSIXct('2016-01-07')
+    ),
+    timespan = as.integer(1),
+    prc_open = c(1.75, 71.00, 5.49, 20.20, 3.11),
+    volume = c(1109, 9282, 7611, 145, 9977),
+    prc_close = c(1.83, 70.00, 5.59, 20.20, 3.14),
+    prc_min = c(1.75, 70.00, 5.16, 20.20, 3.10),
+    prc_max = c(1.83, 71.00, 5.69, 20.20, 3.14),
+    stringsAsFactors = FALSE
+  )
+}
+
+getTestDataBasicValidTimestamps <- function () {
+  c(as.POSIXct('2016-01-04'),
+    as.POSIXct('2016-01-05'),
+    as.POSIXct('2016-01-07'),
+    as.POSIXct('2016-01-08'))
+}
+
+getTestDataBasicValidSymbols <- function () {
+  c('11BIT','ABCDATA')
+}
+
+getTestDataBasicRelative <- function () {
+  src <- as.gpw.import(getTestDataBasic())
+  as.gpw.relative(src)
 }
 
 getDataValues <- function (symbol, timestamp_pos, timespan, timestamp, prc_open, prc_max, prc_min, prc_close, volume) {
@@ -76,6 +93,39 @@ validateTestDataBasic <- function (dailySample) {
 # Tests
 #
 
+test_that("gpw.relative validation happy day", {
+  inputDataFrame <- data.frame(
+    id = 'ABCDATA-2-1',
+    symbol = 'ABCDATA',
+    timestamp_pos = as.integer(2),
+    timespan = as.integer(1),
+    timestamp = as.POSIXct('2016/01/07'),
+    prc_open = 1.1,
+    volume = 1.2,
+    prc_close = 1.3,
+    prc_close_rel = 2,
+    prc_min = 1.4,
+    prc_min_rel = 3,
+    prc_max = 1.5,
+    prc_max_rel = 3,
+    prc_var = 1.6,
+    prc_var_rel = 4,
+    stringsAsFactors = FALSE
+  )
+  inputDataFrame$symbol <- factor(inputDataFrame$symbol)
+
+  dailySample <- gpw.relative(
+    inputDataFrame,
+    validTimestamps = as.POSIXct('2016/01/07'),
+    validSymbols = 'ABCDATA'
+  )
+  expect_true(is.data.frame(dailySample))
+  expect_true(inherits(dailySample, 'gpw.relative'))
+  expect_named(dailySample, c('id', getDataValueColums()))
+  expect_identical(dailySample@validTimestamps, as.POSIXct('2016/01/07'))
+  expect_identical(dailySample@validSymbols, 'ABCDATA')
+})
+
 test_that("getDataRecordId generates record id", {
   df <- data.frame(
     timestamp_pos = c(1,0),
@@ -102,12 +152,17 @@ test_that("getTimestampsVector happy day", {
 
 test_that("getTimestampsLabels happy day", {
   expect_equivalent(
-    gpw::getTimestampsLabels(getTestDataBasic()),
+    gpw::getTimestampsLabels(c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-07'),
+      as.POSIXct('2016-01-08')
+    )),
     list(
-      '2016-01-03 23:00:00' = 1,
-      '2016-01-04 23:00:00' = 2,
-      '2016-01-05 23:00:00' = 3,
-      '2016-01-06 23:00:00' = 4
+      '2016-01-04 00:00:00' = 1,
+      '2016-01-05 00:00:00' = 2,
+      '2016-01-06 00:00:00' = 3,
+      '2016-01-07 00:00:00' = 4
     )
   )
 })
@@ -119,21 +174,30 @@ test_that("getSymbols happy day", {
   )
 })
 
-test_that("normalizeColumns happy day", {
-  dailySample <- gpw::normalizeColumns(getTestDataBasic())
+test_that("as.gpw.relative happy day", {
+  src <- as.gpw.import(getTestDataBasic())
+  dailySample <- as.gpw.relative(src)
   expect_true(is.data.frame(dailySample))
+  expect_true(inherits(dailySample, 'gpw.relative'))
   expect_named(dailySample, c('id', getDataValueColums()))
 
+  expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
+  expect_identical(dailySample@validSymbols, getTestDataBasicValidSymbols())
   expect_identical(nrow(dailySample), 5L)
+
   validateTestDataBasic(dailySample)
 })
 
-test_that("addMissingRecords happy day", {
-  dailySample <- gpw::addMissingRecords(gpw::normalizeColumns(getTestDataBasic()))
+test_that("gpw.addMissingRecords happy day", {
+  dailySample <- gpw.addMissingRecords(getTestDataBasicRelative())
   expect_true(is.data.frame(dailySample))
+  expect_true(inherits(dailySample, 'gpw.relative'))
   expect_named(dailySample, c('id', getDataValueColums()))
 
+  expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
+  expect_identical(dailySample@validSymbols, getTestDataBasicValidSymbols())
   expect_identical(nrow(dailySample), 8L)
+
   validateTestDataBasic(dailySample)
   expect_equivalent(
     dailySample[dailySample$id == 'ABCDATA-1-1', getDataValueColums()],
@@ -144,15 +208,18 @@ test_that("addMissingRecords happy day", {
   expect_equivalent(
     dailySample[dailySample$id == 'ABCDATA-4-1', getDataValueColums()],
     getMissingDataValues(symbol='ABCDATA', timestamp_pos=4, timespan=1))
-
 })
 
-test_that("addTimespanWindow happy day", {
-  dailySample <- gpw::addTimespanWindow(gpw::normalizeColumns(getTestDataBasic()), timespan = 2)
+test_that("gpw.addTimespanWindow happy day", {
+  dailySample <- gpw.addTimespanWindow(getTestDataBasicRelative(), timespan = 2)
   expect_true(is.data.frame(dailySample))
+  expect_true(inherits(dailySample, 'gpw.relative'))
   expect_named(dailySample, c('id', getDataValueColums()))
 
+  expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
+  expect_identical(dailySample@validSymbols, getTestDataBasicValidSymbols())
   expect_identical(nrow(dailySample), 8L)
+
   validateTestDataBasic(dailySample)
   expect_equivalent(
     dailySample[dailySample$id == '11BIT-1-2', getDataValueColums()],
@@ -172,4 +239,5 @@ test_that("addTimespanWindow happy day", {
 
 
 })
+
 

@@ -2,15 +2,13 @@
 
 devtools::load_all('./R')
 
-daily_data <- readDataFiles()
-daily_timestamps <- getTimestampsLabels(daily_data)
+daily_data <- gpw.readDataFiles()
 
 print('Normalizing dataset')
-daily <- normalizeColumns(daily_data)
+daily <- as.gpw.relative(daily_data)
 for (addedTimespan in 2:30) {
   print(paste('Adding timespan ', addedTimespan))
-  daily <- addTimespanWindow(daily, timespan = addedTimespan)
+  daily <- gpw.addTimespanWindow(daily, timespan = addedTimespan)
 }
 
 save(daily, file="./playground/daily.rda")
-save(daily_timestamps, file="./playground/daily_timestamps.rda")

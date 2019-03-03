@@ -55,19 +55,34 @@ validateDailySample01 <- function (dailySample) {
 # Tests
 #
 
-test_that("readDailyData imports daily-sample/01.prn", {
-  dailySample <- gpw::readDailyData('./daily-sample/01.prn')
+test_that("as.gpw.import happy day", {
+  dailySample <- as.gpw.import(data.frame(
+    symbol = 'ABCDATA',
+    timestamp = as.POSIXct('2016/01/07', 'CET'),
+    timespan = as.integer(1),
+    prc_open = 1.1,
+    volume = 1.2,
+    prc_close = 1.3,
+    prc_min = 1.4,
+    prc_max = 1.5,
+    stringsAsFactors = FALSE
+  ))
   expect_true(is.data.frame(dailySample))
+  expect_true(inherits(dailySample, 'gpw.import'))
   expect_named(dailySample, c(getDailyStockIdColums(), getDailyStockValueColums()))
+})
+
+test_that("readDailyData imports daily-sample/01.prn", {
+  dailySample <- gpw.readDailyData('./daily-sample/01.prn')
+  expect_true(inherits(dailySample, 'gpw.import'))
   expect_identical(nrow(dailySample), 5L)
 
   validateDailySample01(dailySample)
 })
 
 test_that("readDataFiles imports daily-sample", {
-  dailySample <- gpw::readDataFiles(folderPath = './daily-sample')
-  expect_true(is.data.frame(dailySample))
-  expect_named(dailySample, c(getDailyStockIdColums(), getDailyStockValueColums()))
+  dailySample <- gpw.readDataFiles(folderPath = './daily-sample')
+  expect_true(inherits(dailySample, 'gpw.import'))
   expect_identical(nrow(dailySample), 6L)
 
   validateDailySample01(dailySample)
