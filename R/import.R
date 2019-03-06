@@ -21,9 +21,6 @@ getGpwImportColumnNames <- function() {
   names(getGpwImportColumnTypes())
 }
 
-gpw.import <- setClass("gpw.import",
-                        contains = "data.frame")
-
 setValidity("gpw.import", function (object) {
   expectedTypes <- getGpwImportColumnTypes()
 
@@ -46,10 +43,6 @@ setValidity("gpw.import", function (object) {
   }
 
   if (isValid) TRUE else msg
-})
-
-setGeneric("as.gpw.import", function(x) {
-  standardGeneric("as.gpw.import")
 })
 
 setMethod("as.gpw.import",

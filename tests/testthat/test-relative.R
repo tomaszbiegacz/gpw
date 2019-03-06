@@ -35,9 +35,9 @@ getTestDataBasicValidTimestamps <- function () {
     as.POSIXct('2016-01-08'))
 }
 
-getTestDataBasicValidSymbols <- function () {
-  c('11BIT','ABCDATA')
-}
+getTestDataBasicValidTimestampPosRange <- function () c(as.integer(1), as.integer(4))
+getTestDataBasicValidTimespans <- function () c(as.integer(1))
+getTestDataBasicValidSymbols <- function () c('11BIT','ABCDATA')
 
 getTestDataBasicRelative <- function () {
   src <- as.gpw.import(getTestDataBasic())
@@ -97,8 +97,8 @@ test_that("gpw.relative validation happy day", {
   inputDataFrame <- data.frame(
     id = 'ABCDATA-2-1',
     symbol = 'ABCDATA',
-    timestamp_pos = as.integer(2),
-    timespan = as.integer(1),
+    timestamp_pos = as.integer(1),
+    timespan = as.integer(2),
     timestamp = as.POSIXct('2016/01/07'),
     prc_open = 1.1,
     volume = 1.2,
@@ -117,13 +117,16 @@ test_that("gpw.relative validation happy day", {
   dailySample <- gpw.relative(
     inputDataFrame,
     validTimestamps = as.POSIXct('2016/01/07'),
-    validSymbols = 'ABCDATA'
+    validTimestampsPosRange = c(as.integer(1), as.integer(1)),
+    validTimespans = as.integer(2)
   )
   expect_true(is.data.frame(dailySample))
   expect_true(inherits(dailySample, 'gpw.relative'))
   expect_named(dailySample, c('id', getDataValueColums()))
-  expect_identical(dailySample@validTimestamps, as.POSIXct('2016/01/07'))
-  expect_identical(dailySample@validSymbols, 'ABCDATA')
+  expect_identical(gpw.getTimestampFromPos(dailySample, 1), as.POSIXct('2016/01/07'))
+  expect_identical(gpw.getTimestampPosRange(dailySample), c(as.integer(1), as.integer(1)))
+  expect_identical(gpw.getValidSymbols(dailySample), 'ABCDATA')
+  expect_identical(gpw.getValidTimespans(dailySample), as.integer(2))
 })
 
 test_that("getDataRecordId generates record id", {
@@ -169,7 +172,7 @@ test_that("getTimestampsLabels happy day", {
 
 test_that("getSymbols happy day", {
   expect_equivalent(
-    gpw::getSymbols(getTestDataBasic()),
+    gpw.getValidSymbols(getTestDataBasicRelative()),
     c('11BIT', 'ABCDATA')
   )
 })
@@ -182,7 +185,9 @@ test_that("as.gpw.relative happy day", {
   expect_named(dailySample, c('id', getDataValueColums()))
 
   expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
-  expect_identical(dailySample@validSymbols, getTestDataBasicValidSymbols())
+  expect_identical(gpw.getTimestampPosRange(dailySample), getTestDataBasicValidTimestampPosRange())
+  expect_identical(gpw.getValidSymbols(dailySample), getTestDataBasicValidSymbols())
+  expect_identical(gpw.getValidTimespans(dailySample), getTestDataBasicValidTimespans())
   expect_identical(nrow(dailySample), 5L)
 
   validateTestDataBasic(dailySample)
@@ -195,7 +200,9 @@ test_that("gpw.addMissingRecords happy day", {
   expect_named(dailySample, c('id', getDataValueColums()))
 
   expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
-  expect_identical(dailySample@validSymbols, getTestDataBasicValidSymbols())
+  expect_identical(gpw.getTimestampPosRange(dailySample), getTestDataBasicValidTimestampPosRange())
+  expect_identical(gpw.getValidSymbols(dailySample), getTestDataBasicValidSymbols())
+  expect_identical(gpw.getValidTimespans(dailySample), getTestDataBasicValidTimespans())
   expect_identical(nrow(dailySample), 8L)
 
   validateTestDataBasic(dailySample)
@@ -217,7 +224,9 @@ test_that("gpw.addTimespanWindow happy day", {
   expect_named(dailySample, c('id', getDataValueColums()))
 
   expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
-  expect_identical(dailySample@validSymbols, getTestDataBasicValidSymbols())
+  expect_identical(gpw.getTimestampPosRange(dailySample), getTestDataBasicValidTimestampPosRange())
+  expect_identical(gpw.getValidSymbols(dailySample), getTestDataBasicValidSymbols())
+  expect_identical(gpw.getValidTimespans(dailySample), c(getTestDataBasicValidTimespans(), as.integer(2)))
   expect_identical(nrow(dailySample), 8L)
 
   validateTestDataBasic(dailySample)
@@ -236,8 +245,4 @@ test_that("gpw.addTimespanWindow happy day", {
     getDataValues(symbol='11BIT', timestamp_pos=3, timespan=2, timestamp=as.POSIXct('2016-01-07'),
                   prc_open=5.49, prc_max=20.20, prc_min=5.16, prc_close=20.20, volume=7756)
   )
-
-
 })
-
-

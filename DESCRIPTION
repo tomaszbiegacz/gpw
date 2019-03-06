@@ -1,7 +1,7 @@
 Package: gpw
 Title: Warsaw Stock Exchange playground
 Version: 0.0.0.9000
-Authors@R: 
+Authors@R:
     person(given = "Tomasz",
            family = "Biegacz",
            role = c("aut", "cre"),
@@ -10,6 +10,7 @@ Description: Warsaw Stock Exchange playground.
 License: MIT
 Encoding: UTF-8
 LazyData: true
-Imports: 
+Imports:
+    dplyr,
     readr,
-    dplyr
+    uuid

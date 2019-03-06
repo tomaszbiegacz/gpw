@@ -4,6 +4,8 @@
 
 library(methods)
 
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
 getGpwRelativeColumnTypes <- function() {
   list(
     'id' = 'character',
@@ -33,18 +35,11 @@ getGpwRelativeValuesColumnNames <- function() {
   all_names[!all_names %in% c('id', 'symbol', 'timestamp_pos', 'timespan')]
 }
 
-gpw.relative <- setClass("gpw.relative",
-                          contains = "data.frame",
-                          slots = list(
-                            validTimestamps = "POSIXct",
-                            validSymbols = "character"
-                          ))
-
 setValidity("gpw.relative", function (object) {
-  expectedTypes <- getGpwRelativeColumnTypes()
-
   isValid <- TRUE
   msg <- NULL
+
+  expectedTypes <- getGpwRelativeColumnTypes()
   objectNames <- colnames(object)
   if (!identical(objectNames, names(expectedTypes))) {
     isValid <- FALSE
@@ -61,24 +56,26 @@ setValidity("gpw.relative", function (object) {
     }
   }
 
+  timestampPosRange = c(min(object$timestamp_pos), max(object$timestamp_pos))
+  if (isValid && !identical(timestampPosRange, object@validTimestampsPosRange)) {
+    isValid <- FALSE
+    msg <- paste('Invalid slot value validTimestampsPosRange, expected', timestampPosRange, 'got', object@validTimestampsPosRange);
+  }
+
+  expectedTimestamps = object@validTimestampsPosRange[2] - object@validTimestampsPosRange[1] + 1
+  if (isValid && length(object@validTimestamps) != expectedTimestamps) {
+    isValid <- FALSE
+    msg <- paste('Invalid number of slot values validTimestamps, expected', expectedTimestamps, 'got', length(object@validTimestamps));
+  }
+
+  expectedTimespans = unique(object$timespan)
+  if (isValid && !identical(expectedTimespans, object@validTimespans)) {
+    isValid <- FALSE
+    msg <- paste('Invalid slot value validTimespans, expected', expectedTimespans, 'got', object@validTimespans);
+  }
+
   if (isValid) TRUE else msg
 })
-
-setGeneric("as.gpw.relative", function(x, ...) {
-  standardGeneric("as.gpw.relative")
-}, signature = c('x'))
-
-setGeneric("gpw.addMissingRecords", function(x, ...) {
-  standardGeneric("gpw.addMissingRecords")
-}, signature = c('x'))
-
-setGeneric("gpw.addTimespanWindow", function(x, timespan, additionalTimestamp, ...) {
-  standardGeneric("gpw.addTimespanWindow")
-}, signature = c('x'))
-
-#
-# Implementation
-#
 
 getTimestampsVector <- function (gpwData) {
   sort(unique(gpwData$timestamp), decreasing = FALSE)
@@ -90,8 +87,11 @@ getTimestampsLabels <- function (validTimestamps) {
   sequence
 }
 
-getSymbols <- function (gpwData) {
-  levels(factor(gpwData$symbol))
+getTimestampPosRange <- function (timestamp_pos) {
+  c(
+    min(timestamp_pos),
+    max(timestamp_pos)
+  )
 }
 
 getDataRecordId <- function (symbol, timestamp_pos, timespan) {
@@ -120,8 +120,8 @@ setMethod("as.gpw.relative",
                 use.names = F
               )
             )
+            validTimestampsPosRange <- getTimestampPosRange(normalized$timestamp_pos)
 
-            validSymbols <- getSymbols(x)
             normalized$symbol = factor(normalized$symbol)
 
             normalized$id <- getDataRecordId(
@@ -135,17 +135,42 @@ setMethod("as.gpw.relative",
             gpw.relative(
               normalized[,getGpwRelativeColumnNames()],
               validTimestamps = validTimestamps,
-              validSymbols = validSymbols
+              validTimestampsPosRange = validTimestampsPosRange,
+              validTimespans = unique(normalized$timespan)
             )
           }
 )
 
+setMethod("gpw.getValidSymbols",
+          c(x = "gpw.relative"),
+          function (x) {
+            levels(x$symbol)
+          })
+
+setMethod("gpw.getTimestampPosRange",
+          c(x = "gpw.relative"),
+          function (x) {
+            x@validTimestampsPosRange
+          })
+
+setMethod("gpw.getTimestampFromPos",
+          c(x = "gpw.relative"),
+          function (x, pos) {
+            x@validTimestamps[pos]
+          })
+
+setMethod("gpw.getValidTimespans",
+          c(x = "gpw.relative"),
+          function (x) {
+            x@validTimespans
+          })
+
 setMethod("gpw.addMissingRecords",
           c(x = "gpw.relative"),
           function(x) {
-            validSymbols <- x@validSymbols
-            validTimestampsPos <- unique(x$timestamp_pos)
-            validTimespans <- unique(x$timespan)
+            validSymbols <- gpw.getValidSymbols(x)
+            validTimestampsPos <- c(x@validTimestampsPosRange[1]:x@validTimestampsPosRange[2])
+            validTimespans <- x@validTimespans
 
             result <- expand.grid(
               symbol = validSymbols,
@@ -165,7 +190,8 @@ setMethod("gpw.addMissingRecords",
             gpw.relative(
               normalized,
               validTimestamps = x@validTimestamps,
-              validSymbols = x@validSymbols
+              validTimestampsPosRange = x@validTimestampsPosRange,
+              validTimespans = x@validTimespans
             )
           }
 )
@@ -186,10 +212,8 @@ setMethod("gpw.addTimespanWindow",
             }
 
             baseTimespan <- validTimespan - validAdditionalTimestamp
-            if(baseTimespan < 0) stop('Invalid timespan: invalid value')
-
+            if(baseTimespan %!in% x@validTimespans) stop('Invalid timespan: no base data')
             baseData <- x[x$timespan == baseTimespan,]
-            if(nrow(baseData) == 0) stop('Invalid timespan: no base data')
 
             validTimestampsPos <- sort(unique(x$timestamp_pos), decreasing = FALSE)
             minTimestampPos <- validTimestampsPos[1]
@@ -227,7 +251,8 @@ setMethod("gpw.addTimespanWindow",
             gpw.relative(
               rbind(x, result[,getGpwRelativeColumnNames()]),
               validTimestamps = x@validTimestamps,
-              validSymbols = x@validSymbols
+              validTimestampsPosRange = x@validTimestampsPosRange,
+              validTimespans = c(x@validTimespans, validTimespan)
             )
           }
 )
