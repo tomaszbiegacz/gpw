@@ -1,6 +1,18 @@
 library(methods)
 
 #
+# Constant
+#
+
+PHI <- 1.618
+
+#
+# Operators
+#
+
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+#
 # Classes
 #
 
@@ -29,6 +41,11 @@ gpw.gene <- setClass('gpw.gene',
                         isEnabledForRecord = "function"
                       ))
 
+gpw.roulette <- setClass('gpw.roulette',
+                          representation(
+                            valueSlot = 'numeric'
+                          ))
+
 #
 # Generics
 #
@@ -41,10 +58,11 @@ setGeneric("as.gpw.relative", function(x, ...) {
   standardGeneric("as.gpw.relative")
 }, signature = c('x'))
 
-setGeneric("as.gpw.gene", function(stockData, stockName, pastTelativeTimePos, timespan, aggregator, operator, value, ...) {
+setGeneric("as.gpw.gene", function(stockData, stockName, pastTelativeTimePos, aggregationTimespan, aggregator, operator, value, ...) {
   standardGeneric("as.gpw.gene")
 }, signature = c('stockData'))
 
+# gpw.relative
 
 setGeneric("gpw.getValidSymbols", function(x, ...) {
   standardGeneric("gpw.getValidSymbols")
@@ -70,7 +88,18 @@ setGeneric("gpw.addTimespanWindow", function(x, timespan, additionalTimestamp, .
   standardGeneric("gpw.addTimespanWindow")
 }, signature = c('x'))
 
+# gpw.gene
 
 setGeneric("gpw.isEnabled", function(x, timePos, ...) {
   standardGeneric("gpw.isEnabled")
+}, signature = c('x'))
+
+setGeneric("gpw.mutate", function(x, mutationRate, ...) {
+  standardGeneric("gpw.mutate")
+}, signature = c('x'))
+
+# gpw.roulette
+
+setGeneric("gpw.spin", function(x, randomNumberGenerator, ...) {
+  standardGeneric("gpw.spin")
 }, signature = c('x'))

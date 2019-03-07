@@ -83,7 +83,7 @@ gpw.readDailyData <- function (filePath,
     )
   ))
 
-  result$timespan <- as.integer(1)
+  result$timespan <- 1L
   if (returnDataFrame) result[,getGpwImportColumnNames()] else gpw.import(result[,getGpwImportColumnNames()])
 }
 

@@ -59,7 +59,7 @@ test_that("as.gpw.import happy day", {
   dailySample <- as.gpw.import(data.frame(
     symbol = 'ABCDATA',
     timestamp = as.POSIXct('2016/01/07', 'CET'),
-    timespan = as.integer(1),
+    timespan = 1L,
     prc_open = 1.1,
     volume = 1.2,
     prc_close = 1.3,

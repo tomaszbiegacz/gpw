@@ -4,8 +4,6 @@
 
 library(methods)
 
-'%!in%' <- function(x,y)!('%in%'(x,y))
-
 getGpwRelativeColumnTypes <- function() {
   list(
     'id' = 'character',
@@ -202,7 +200,7 @@ setMethod("gpw.addTimespanWindow",
             validTimespan <- as.integer(timespan)
 
             if (missing(additionalTimestamp)) {
-              validAdditionalTimestamp <- as.integer(1)
+              validAdditionalTimestamp <- 1L
             }
             else {
               if (additionalTimestamp != 1) {
