@@ -68,7 +68,7 @@ test_that("as.gpw.import happy day", {
     stringsAsFactors = FALSE
   ))
   expect_true(is.data.frame(dailySample))
-  expect_true(inherits(dailySample, 'gpw.import'))
+  expect_identical(class(dailySample)[1], 'gpw.import')
   expect_named(dailySample, c(getDailyStockIdColums(), getDailyStockValueColums()))
 })
 

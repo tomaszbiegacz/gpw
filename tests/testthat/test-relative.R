@@ -48,7 +48,7 @@ getDataValues <- function (symbol, timestamp_pos, timespan, timestamp, prc_open,
   list(symbol=factor(symbol), timestamp_pos=timestamp_pos, timespan=timespan, timestamp=timestamp,
        prc_open=prc_open, volume=volume, prc_close=prc_close, prc_close_rel=(prc_close/prc_open)-1,
        prc_min=prc_min, prc_min_rel=(prc_min / prc_open)-1, prc_max=prc_max, prc_max_rel=(prc_max / prc_open)-1,
-       prc_var=prc_max-prc_min, prc_var_rel=((prc_max-prc_min)/prc_open)-1
+       prc_var=prc_max-prc_min, prc_var_rel=(prc_max-prc_min)/prc_open
   )
 }
 
@@ -121,7 +121,7 @@ test_that("gpw.relative validation happy day", {
     validTimespans = as.integer(2)
   )
   expect_true(is.data.frame(dailySample))
-  expect_true(inherits(dailySample, 'gpw.relative'))
+
   expect_named(dailySample, c('id', getDataValueColums()))
   expect_identical(gpw.getTimestampFromPos(dailySample, 1), as.POSIXct('2016/01/07'))
   expect_identical(gpw.getTimestampPosRange(dailySample), c(as.integer(1), as.integer(1)))
@@ -181,7 +181,7 @@ test_that("as.gpw.relative happy day", {
   src <- as.gpw.import(getTestDataBasic())
   dailySample <- as.gpw.relative(src)
   expect_true(is.data.frame(dailySample))
-  expect_true(inherits(dailySample, 'gpw.relative'))
+  expect_identical(class(dailySample)[1], 'gpw.relative')
   expect_named(dailySample, c('id', getDataValueColums()))
 
   expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
@@ -196,7 +196,7 @@ test_that("as.gpw.relative happy day", {
 test_that("gpw.addMissingRecords happy day", {
   dailySample <- gpw.addMissingRecords(getTestDataBasicRelative())
   expect_true(is.data.frame(dailySample))
-  expect_true(inherits(dailySample, 'gpw.relative'))
+  expect_identical(class(dailySample)[1], 'gpw.relative')
   expect_named(dailySample, c('id', getDataValueColums()))
 
   expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())
@@ -220,7 +220,7 @@ test_that("gpw.addMissingRecords happy day", {
 test_that("gpw.addTimespanWindow happy day", {
   dailySample <- gpw.addTimespanWindow(getTestDataBasicRelative(), timespan = 2)
   expect_true(is.data.frame(dailySample))
-  expect_true(inherits(dailySample, 'gpw.relative'))
+  expect_identical(class(dailySample)[1], 'gpw.relative')
   expect_named(dailySample, c('id', getDataValueColums()))
 
   expect_identical(dailySample@validTimestamps, getTestDataBasicValidTimestamps())

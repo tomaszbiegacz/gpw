@@ -101,7 +101,7 @@ addCalculatedColumns <- function (gpwData) {
   gpwData$prc_min_rel    <- gpwData$prc_min / gpwData$prc_open - 1
   gpwData$prc_close_rel  <- gpwData$prc_close / gpwData$prc_open - 1
   gpwData$prc_var        <- gpwData$prc_max - gpwData$prc_min
-  gpwData$prc_var_rel    <- gpwData$prc_var / gpwData$prc_open - 1
+  gpwData$prc_var_rel    <- gpwData$prc_var / gpwData$prc_open
   gpwData
 }
 
@@ -149,6 +149,12 @@ setMethod("gpw.getTimestampPosRange",
           c(x = "gpw.relative"),
           function (x) {
             x@validTimestampsPosRange
+          })
+
+setMethod("gpw.getTimestampPosLength",
+          c(x = "gpw.relative"),
+          function (x) {
+            x@validTimestampsPosRange[2] - x@validTimestampsPosRange[1] + 1
           })
 
 setMethod("gpw.getTimestampFromPos",

@@ -9,6 +9,11 @@ gpw.randomInteger <- function (maxValue, randomNumberGenerator)
   as.integer(ceiling(selectedNumber))
 }
 
+gpw.randomItem <- function(items)
+{
+  items[gpw.randomInteger(length(items))]
+}
+
 #
 # gpw.roulette
 #
@@ -34,4 +39,11 @@ setMethod("gpw.spin",
               selectedNumber <- randomNumberGenerator()
 
             as.integer(which( order(c(selectedNumber,x@valueSlot))==1 ))
+          })
+
+setMethod("gpw.spin",
+          c(x = "numeric"),
+          function(x) {
+            roulette <- gpw.rouletteWheel(x)
+            gpw.spin(roulette)
           })

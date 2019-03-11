@@ -40,6 +40,12 @@ test_that("spin last", {
   expect_identical(value, 3L)
 })
 
+test_that("spin components", {
+  components <- c(1, 3, 6)
+  value <- gpw.spin(c(1, 3, 6))
+  expect_true(value %in% components, paste('Got value', str(value)))
+})
+
 test_that("gpw.randomInteger bottom", {
   runifMock <- function(max) {
     expect_identical(max, 10L)

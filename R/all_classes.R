@@ -1,4 +1,5 @@
 library(methods)
+library(S4Vectors)
 
 #
 # Constant
@@ -27,6 +28,11 @@ gpw.relative <- setClass("gpw.relative",
                             validTimespans = "integer"
                           ))
 
+gpw.roulette <- setClass('gpw.roulette',
+                         representation(
+                           valueSlot = 'numeric'
+                         ))
+
 gpw.gene <- setClass('gpw.gene',
                       representation(
                         id = 'character',
@@ -41,28 +47,39 @@ gpw.gene <- setClass('gpw.gene',
                         isEnabledForRecord = "function"
                       ))
 
-gpw.roulette <- setClass('gpw.roulette',
-                          representation(
-                            valueSlot = 'numeric'
-                          ))
+gpw.geneList = setClass("gpw.geneList", 
+                  contains = "SimpleList", 
+                  prototype = prototype(elementType="gpw.gene")
+                )                      
+
+gpw.chromosone <- setClass('gpw.chromosone',
+                           representation(
+                             id = 'character',
+                             stockData = 'gpw.relative',
+                             stockName = 'character',
+                             fitnessTimeShift = 'integer',
+                             gene = 'gpw.geneList'
+                           ))
 
 #
 # Generics
 #
 
+setGeneric("stockRecords", function(x) standardGeneric("stockRecords"))
+
+setGeneric("signature", function(x) standardGeneric("signature"))
+
+# gpw.import
+
 setGeneric("as.gpw.import", function(x) {
   standardGeneric("as.gpw.import")
 })
 
+# gpw.relative
+
 setGeneric("as.gpw.relative", function(x, ...) {
   standardGeneric("as.gpw.relative")
 }, signature = c('x'))
-
-setGeneric("as.gpw.gene", function(stockData, stockName, pastTelativeTimePos, aggregationTimespan, aggregator, operator, value, ...) {
-  standardGeneric("as.gpw.gene")
-}, signature = c('stockData'))
-
-# gpw.relative
 
 setGeneric("gpw.getValidSymbols", function(x, ...) {
   standardGeneric("gpw.getValidSymbols")
@@ -74,6 +91,10 @@ setGeneric("gpw.getValidTimespans", function(x, ...) {
 
 setGeneric("gpw.getTimestampPosRange", function(x, ...) {
   standardGeneric("gpw.getTimestampPosRange")
+}, signature = c('x'))
+
+setGeneric("gpw.getTimestampPosLength", function(x, ...) {
+  standardGeneric("gpw.getTimestampPosLength")
 }, signature = c('x'))
 
 setGeneric("gpw.getTimestampFromPos", function(x, pos, ...) {
@@ -88,7 +109,25 @@ setGeneric("gpw.addTimespanWindow", function(x, timespan, additionalTimestamp, .
   standardGeneric("gpw.addTimespanWindow")
 }, signature = c('x'))
 
+# gpw.roulette
+
+setGeneric("gpw.spin", function(x, randomNumberGenerator, ...) {
+  standardGeneric("gpw.spin")
+}, signature = c('x'))
+
 # gpw.gene
+
+setGeneric("as.gpw.gene", function(stockData, stockName, pastTelativeTimePos, aggregationTimespan, aggregator, operator, value, ...) {
+  standardGeneric("as.gpw.gene")
+}, signature = c('stockData'))
+
+setGeneric("gpw.geneAggregatorAbsMedian", function(stockData, ...) {
+  standardGeneric("gpw.geneAggregatorAbsMedian")
+}, signature = c('stockData'))
+
+setGeneric("gpw.randomGene", function(stockData, valueSdPerOperator, ...) {
+  standardGeneric("gpw.randomGene")
+}, signature = c('stockData'))
 
 setGeneric("gpw.isEnabled", function(x, timePos, ...) {
   standardGeneric("gpw.isEnabled")
@@ -98,8 +137,24 @@ setGeneric("gpw.mutate", function(x, mutationRate, ...) {
   standardGeneric("gpw.mutate")
 }, signature = c('x'))
 
-# gpw.roulette
+# gpw.chromosone
 
-setGeneric("gpw.spin", function(x, randomNumberGenerator, ...) {
-  standardGeneric("gpw.spin")
+setGeneric("as.gpw.chromosone", function(stockData, stockName, fitnessTimeShift, genesCount, valueSdPerOperator, ...) {
+  standardGeneric("as.gpw.chromosone")
+}, signature = c('stockData'))
+
+setGeneric("gpw.isTheSameSpiece", function(x, y, ...) {
+  standardGeneric("gpw.isTheSameSpiece")
+}, signature = c('x', 'y'))
+
+setGeneric("gpw.getFitness", function(x, ...) {
+  standardGeneric("gpw.getFitness")
+}, signature = c('x'))
+
+setGeneric("gpw.mutate", function(x, mutationRate, ...) {
+  standardGeneric("gpw.mutate")
+}, signature = c('x'))
+
+setGeneric("gpw.crossover", function(x, y, crossoverRate, ...) {
+  standardGeneric("gpw.crossover")
 }, signature = c('x'))

@@ -43,6 +43,35 @@ getTestDataMutation <- function () {
 # Tests
 #
 
+test_that("gpw.geneAggregatorAbsMedian happy day", {
+  dataFrame <- data.frame(
+    symbol = c('11BIT', '11BIT', '11BIT'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-06')
+    ),
+    timespan = c(2L, 3L, 4L),
+    prc_open = c(1, 1, 1),
+    volume = c(2, 4, 8),
+    prc_close = c(1.2, 1.3, 1.8),
+    prc_min = c(0.8, 0.9, 0.1),
+    prc_max = c(1.5, 1.6, 1.9),
+    stringsAsFactors = FALSE
+  )
+  dataImport <- as.gpw.import(dataFrame)
+  dataRelative <- as.gpw.relative(dataImport)
+
+  expected <- list(
+    prc_close_rel = 0.3,
+    prc_min_rel = 0.2,
+    prc_max_rel = 0.6,
+    prc_var_rel = 0.7,
+    volume = 4
+  )
+  expect_equal(gpw.geneAggregatorAbsMedian(dataRelative), expected)
+})
+
 test_that("operatorEquals", {
   expect_true(operatorEquals(1000, 1001))
   expect_true(operatorEquals(-1000, -1001))
@@ -75,11 +104,47 @@ test_that("gpw.gene validation happy day", {
     value = 0.1
   )
 
+  expect_identical(class(data)[1], 'gpw.gene')
   expect_true(gpw.isEnabled(data, 2))
+  expect_identical(as.character(data), '11BIT with prc_close_rel > 0.1 over ( 1 timepos and 2 timespan )')
+  expect_identical(signature(data), '11BIT|2|prc_close_rel')
 
   # resiliency
   expect_false(gpw.isEnabled(data, 3))
   expect_false(gpw.isEnabled(data, 1))
+})
+
+test_that("gpw.gene stockRecords happy day", {
+  dataFrame <- data.frame(
+    symbol = c('11BIT', '11BIT' , '12BIT'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-06')
+    ),
+    timespan = c(2L, 3L, 2L),
+    prc_open = c(1, 2, 1),
+    volume = c(2, 4, 2),
+    prc_close = c(1.2, 1.3, 1),
+    prc_min = c(0.8, 2.1, 1),
+    prc_max = c(1.5, 5, 1),
+    stringsAsFactors = FALSE
+  )
+
+  dataImport <- as.gpw.import(dataFrame)
+  stockData <- as.gpw.relative(dataImport)
+
+  data <- as.gpw.gene(
+    stockData = stockData,
+    stockName = '11BIT',
+    pastRelativeTimePos = 1L,
+    aggregationTimespan = 2L,
+    aggregator = 'prc_close_rel',
+    operator = '>',
+    value = 0.1
+  )
+
+  expect_identical(nrow(stockRecords(data)), 1L)
 })
 
 test_that("gpw.gene prc_min_rel <", {
@@ -120,6 +185,11 @@ test_that("mutateInteger happy day", {
   expect_identical(mutateInteger(10, 2, valueShift = 1.5), 4L)
   expect_identical(mutateInteger(10, 2, valueShift = 11.1), 10L)
   expect_identical(mutateInteger(10, 2, valueShift = -2), 1L)
+})
+
+test_that("mutateNumericPositive happy day", {
+  expect_identical(mutateNumericPositive(10, valueShift = 1.1), 11.1)
+  expect_identical(mutateNumericPositive(10, valueShift = -11.1), 0)
 })
 
 test_that("mutateGenePart stockName", {
@@ -266,9 +336,15 @@ test_that("gpw.mutate happy day", {
   )
 
   mutated <- gpw.mutate(gene, 0.2, randomNumberGenerator = function() 0.1)
+  expect_true(inherits(mutated, 'gpw.gene'))
   expect_true(gene@id != mutated@id)
 
   notMutated <- gpw.mutate(gene, 0.2, randomNumberGenerator = function() 0.3)
   expect_true(gene@id == notMutated@id)
+})
+
+test_that("gpw.randomGene happy day", {
+  result <- gpw.randomGene(getTestDataMutation())
+  expect_true(inherits(result, 'gpw.gene'))
 })
 

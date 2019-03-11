@@ -2,6 +2,10 @@
 
 Data has been retrieved from <http://bossa.pl/notowania/metastock/>.
 
+## Prerequisites
+
+Before you can start, install [R](https://cran.r-project.org/) in version 3.5. Run `sudo ./install-imports.R` to ensure that all dependencies are in place.
+
 ## Getting started
 
 Rebuild sample data set with

@@ -6,11 +6,12 @@ Authors@R:
            family = "Biegacz",
            role = c("aut", "cre"),
            email = "tbiegacz@gmail.com")
-Description: Warsaw Stock Exchange playground.
+Description: Warsaw Stock Exchange playground. Install dependend packages via 'install-imports.R'
 License: MIT
 Encoding: UTF-8
 LazyData: true
 Imports:
     dplyr,
-    readr,
-    uuid
+    readr,    
+    uuid,
+    BiocManager

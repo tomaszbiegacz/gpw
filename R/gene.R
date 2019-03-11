@@ -58,9 +58,7 @@ setValidity("gpw.gene", function (object) {
     msg <- paste('Invalid stock name:', object@stockName)
   }
 
-  timePosRange <- gpw.getTimestampPosRange(object@stockData)
-  timePosLength = timePosRange[2] - timePosRange[1] + 1
-  if (isValid && (object@pastRelativeTimePos < 1 || object@pastRelativeTimePos > timePosLength)) {
+  if (isValid && (object@pastRelativeTimePos < 1 || object@pastRelativeTimePos > gpw.getTimestampPosLength(object@stockData))) {
     isValid <- FALSE
     msg <- paste('Invalid pastRelativeTimePos:', object@pastRelativeTimePos)
   }
@@ -83,6 +81,20 @@ setValidity("gpw.gene", function (object) {
   if (isValid) TRUE else msg
 })
 
+setMethod("stockRecords", "gpw.gene", function (x) x@stockRecords)
+
+setMethod("as.character",
+          "gpw.gene",
+          function(x) paste(
+            x@stockName, 'with', x@aggregator, x@operator, x@value, 
+            'over (', x@pastRelativeTimePos, 'timepos and', x@timespan, 'timespan', ')'
+            )
+)
+
+setMethod("show", "gpw.gene", function(object) cat(as.character(object)))
+
+setMethod("signature", "gpw.gene", function(x) paste(x@stockName, x@timespan, x@aggregator, sep='|'))
+
 setMethod("as.gpw.gene",
           c(stockData = "gpw.relative"),
           function (stockData, stockName, pastRelativeTimePos, aggregationTimespan, aggregator, operator, value) {
@@ -96,13 +108,40 @@ setMethod("as.gpw.gene",
               id = uuid::UUIDgenerate(),
               stockData = stockData,
               stockName = stockName,
-              pastRelativeTimePos = pastRelativeTimePos,
               timespan = aggregationTimespan,
               aggregator = aggregator,
+              pastRelativeTimePos = pastRelativeTimePos,
               operator = operator,
               value = value,
-              stockRecords = subset(stockData, symbol == stockName && timespan == aggregationTimespan),
+              stockRecords = subset(stockData, symbol == stockName & timespan == aggregationTimespan),
               isEnabledForRecord = isEnabledForRecordFunction
+            )
+          })
+
+setMethod("gpw.geneAggregatorAbsMedian",
+          c(stockData = "gpw.relative"),
+          function (stockData) {
+            result = list()
+            for (aggName in getAggregators()) {
+              result[aggName] = median(abs(stockData[[aggName]]))
+            }
+            result
+          })
+
+setMethod("gpw.randomGene",
+          c(stockData = "gpw.relative"),
+          function (stockData, valueSdPerOperator) {
+            selectedAggregator <- gpw.randomItem(getAggregators())
+            medians <- if (missing(valueSdPerOperator)) gpw.geneAggregatorAbsMedian(stockData) else valueSdPerOperator
+            aggregatorMedian <- medians[[selectedAggregator]]
+            as.gpw.gene(
+              stockData = stockData,
+              stockName = gpw.randomItem(gpw.getValidSymbols(stockData)),
+              pastRelativeTimePos = gpw.randomInteger(gpw.getTimestampPosLength(stockData)),
+              aggregationTimespan = gpw.randomItem(gpw.getValidTimespans(stockData)),
+              aggregator = selectedAggregator,
+              operator = gpw.randomItem(getOperatorNames()),
+              value = rnorm(1, sd = aggregatorMedian)
             )
           })
 
@@ -139,32 +178,43 @@ mutateName <- function (validNames, currentName, newNamePosition)
   }
 }
 
-mutateNumeric <- function (maxValue, currentValue, valueShift)
+mutateNumericPositive <- function (currentValue, valueShift)
 {
-  minValue <- -1 * maxValue
-  shift <- if(missing(valueShift)) rnorm(1, sd = maxValue / PHI) else valueShift
-  min(maxValue, max(minValue, currentValue + shift))
+  shift <- if(missing(valueShift)) rnorm(1, sd = max(1, currentValue)) else valueShift
+  max(0, currentValue + shift)
 }
 
 mutateInteger <- function (maxValue, currentValue, valueShift)
 {
-  shift <- if(missing(valueShift)) max(1, rnorm(1, sd = maxValue / PHI)) else valueShift
+  shift <- if(missing(valueShift)) max(1, rnorm(1, sd = max(3, currentValue))) else valueShift
   as.integer(min(maxValue, max(1, as.integer(round(currentValue + shift)))))
 }
 
+GENE_STOCK_NAME = 1
+GENE_TIMESTAMP = 2
+GENE_TIMESPAN = 3
+GENE_AGGREGATOR = 4
+GENE_OPERATOR = 5
+GENE_VALUE = 6
+
+spinGenePart <- function() {
+  # distibution of probabilities at roulette wheel
+  gpw.spin(c(1:6))
+}
+
 mutateGenePart <- function (x, partToMutate) {
-  stockName <- if (partToMutate == 1)
+  stockName <- if (partToMutate == GENE_STOCK_NAME)
     mutateName(gpw.getValidSymbols(x@stockData), x@stockName) else x@stockName
-  pastRelativeTimePos <- if (partToMutate == 2)
+  pastRelativeTimePos <- if (partToMutate == GENE_TIMESTAMP)
     mutateInteger(gpw.getTimestampPosRange(x@stockData)[2], x@pastRelativeTimePos) else x@pastRelativeTimePos
-  timespan <- if (partToMutate == 3)
+  timespan <- if (partToMutate == GENE_TIMESPAN)
     mutateInteger(max(gpw.getValidTimespans(x@stockData)), x@timespan) else x@timespan
-  aggregator <- if (partToMutate == 4)
+  aggregator <- if (partToMutate == GENE_AGGREGATOR)
     mutateName(getAggregators(), x@aggregator) else x@aggregator
-  operator <- if (partToMutate == 5)
+  operator <- if (partToMutate == GENE_OPERATOR)
     mutateName(getOperatorNames(), x@operator) else x@operator
-  value <- if (partToMutate == 6)
-    mutateNumeric(100, x@value) else x@value
+  value <- if (partToMutate == GENE_VALUE)
+    mutateNumericPositive(x@value) else x@value
 
   as.gpw.gene(
     stockData = x@stockData,
@@ -185,13 +235,9 @@ setMethod("gpw.mutate",
             else
               selectedNumber <- randomNumberGenerator()
 
-            if (mutationRate >= selectedNumber) {
-              genePartMutationWheel <- gpw.rouletteWheel(c(1:6))
-              partToMutate <- gpw.spin(genePartMutationWheel)
-              mutateGenePart(x, partToMutate)
-            }
-            else {
+            if (mutationRate >= selectedNumber)
+              mutateGenePart(x, spinGenePart())
+            else
               x
-            }
           })
 
