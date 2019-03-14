@@ -35,30 +35,44 @@ gpw.roulette <- setClass('gpw.roulette',
 
 gpw.gene <- setClass('gpw.gene',
                       representation(
-                        id = 'character',
+                        id = 'character',                                # UUID
                         stockData = 'gpw.relative',
+
+                        # signature
                         stockName = 'character',
-                        pastRelativeTimePos = 'integer',
-                        timespan = 'integer',
+                        timespan = 'integer',                            # > 0
                         aggregator = 'character',
+
+                        # value
+                        pastRelativeTimePos = 'integer',                 # > 0
                         operator = 'character',
                         value = 'numeric',
+
+                        # cache
                         stockRecords = "data.frame",
                         isEnabledForRecord = "function"
                       ))
 
-gpw.geneList = setClass("gpw.geneList", 
-                  contains = "SimpleList", 
+gpw.geneList = setClass("gpw.geneList",
+                  contains = "SimpleList",
                   prototype = prototype(elementType="gpw.gene")
-                )                      
+                )
 
 gpw.chromosone <- setClass('gpw.chromosone',
                            representation(
-                             id = 'character',
+                             id = 'character',                           # UUID
                              stockData = 'gpw.relative',
+
+                             # fitness
                              stockName = 'character',
-                             fitnessTimeShift = 'integer',
-                             gene = 'gpw.geneList'
+                             futureRelativeTimePos = 'integer',          # > 0
+                             isOptimistic = 'logical',
+
+                             # activation
+                             gene = 'gpw.geneList',
+
+                             # cache
+                             stockRecords = "data.frame"
                            ))
 
 #
@@ -139,7 +153,7 @@ setGeneric("gpw.mutate", function(x, mutationRate, ...) {
 
 # gpw.chromosone
 
-setGeneric("as.gpw.chromosone", function(stockData, stockName, fitnessTimeShift, genesCount, valueSdPerOperator, ...) {
+setGeneric("as.gpw.chromosone", function(stockData, stockName, futureRelativeTimePos, isOptimistic, genesCount, valueSdPerOperator, ...) {
   standardGeneric("as.gpw.chromosone")
 }, signature = c('stockData'))
 
@@ -147,7 +161,7 @@ setGeneric("gpw.isTheSameSpiece", function(x, y, ...) {
   standardGeneric("gpw.isTheSameSpiece")
 }, signature = c('x', 'y'))
 
-setGeneric("gpw.getFitness", function(x, ...) {
+setGeneric("gpw.getFitness", function(x, timestampPos,...) {
   standardGeneric("gpw.getFitness")
 }, signature = c('x'))
 

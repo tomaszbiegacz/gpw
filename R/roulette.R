@@ -1,3 +1,5 @@
+library(methods)
+
 gpw.randomInteger <- function (maxValue, randomNumberGenerator)
 {
   if (maxValue < 1) stop('Invalid maxValue')
@@ -18,10 +20,21 @@ gpw.randomItem <- function(items)
 # gpw.roulette
 #
 
-library(methods)
+setValidity("gpw.roulette", function (object) {
+  isValid <- TRUE
+  msg <- NULL
+
+  if (isValid && length(object@valueSlot) == 0) {
+    isValid <- FALSE
+    msg <- 'Invalid value slot: empty'
+  }
+
+  if (isValid) TRUE else msg
+})
 
 gpw.rouletteWheel <- function (component) {
-  if(!(min(component) > 0)) stop('Invalid component')
+  if(length(component) == 0) stop('Invalid component: empty')
+  if(!(min(component) > 0)) stop('Invalid component: not positive')
   componentsSum <- sum(component)
   getProbability <- function (x) x/componentsSum
   cumulatedProbabilities <- vapply(cumsum(component), getProbability, 1)
@@ -38,7 +51,8 @@ setMethod("gpw.spin",
             else
               selectedNumber <- randomNumberGenerator()
 
-            as.integer(which( order(c(selectedNumber,x@valueSlot))==1 ))
+            result <- max(1, min(length(x@valueSlot), which( order(c(selectedNumber,x@valueSlot))==1 )))
+            as.integer(result)
           })
 
 setMethod("gpw.spin",

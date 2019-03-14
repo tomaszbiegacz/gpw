@@ -21,17 +21,18 @@ getTestDataBasic <- function () {
 
 getTestDataMutation <- function () {
   dataFrame <- data.frame(
-    symbol = c('11BIT', 'ABCD'),
+    symbol = c('11BIT', 'ABCD', '11BIT'),
     timestamp = c(
       as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
       as.POSIXct('2016-01-05')
     ),
-    timespan = c(2L, 3L),
-    prc_open = c(1, 2),
-    volume = c(2, 4),
-    prc_close = c(1.2, 1.3),
-    prc_min = c(0.8, 2.1),
-    prc_max = c(1.5, 5),
+    timespan = c(2L, 3L, 3L),
+    prc_open = c(1, 2, 2),
+    volume = c(2, 4, 4),
+    prc_close = c(1.2, 1.3, 1.3),
+    prc_min = c(0.8, 2.1, 2.1),
+    prc_max = c(1.5, 5, 5),
     stringsAsFactors = FALSE
   )
 
@@ -178,13 +179,15 @@ test_that("gpw.gene prc_min_rel =", {
 test_that("mutateName happy day", {
   expect_identical(mutateName(c('one', 'two'), 'one', newNamePosition = 2), 'two')
   expect_identical(mutateName(c('one', 'two'), 'two', newNamePosition = 2), 'one')
+
+  expect_identical(mutateName(c(2L, 3L), 3L, newNamePosition = 2), 2L)
 })
 
 test_that("mutateInteger happy day", {
-  expect_identical(mutateInteger(10, 2, valueShift = 1.1), 3L)
-  expect_identical(mutateInteger(10, 2, valueShift = 1.5), 4L)
-  expect_identical(mutateInteger(10, 2, valueShift = 11.1), 10L)
-  expect_identical(mutateInteger(10, 2, valueShift = -2), 1L)
+  expect_identical(mutateInteger(c(1, 10), 2, valueShift = 1.1), 3L)
+  expect_identical(mutateInteger(c(1, 10), 2, valueShift = 1.5), 4L)
+  expect_identical(mutateInteger(c(1, 10), 2, valueShift = 11.1), 10L)
+  expect_identical(mutateInteger(c(2, 10), 3, valueShift = -2), 2L)
 })
 
 test_that("mutateNumericPositive happy day", {
@@ -197,7 +200,7 @@ test_that("mutateGenePart stockName", {
     stockData = getTestDataMutation(),
     stockName = '11BIT',
     pastRelativeTimePos = 1L,
-    aggregationTimespan = 2L,
+    aggregationTimespan = 3L,
     aggregator = 'prc_min_rel',
     operator = '=',
     value = -0.2
@@ -225,7 +228,7 @@ test_that("mutateGenePart pastRelativeTimePos", {
     value = -0.2
   )
 
-  mutated <- mutateGenePart(gene, 2)
+  mutated <- mutateGenePart(gene, 4)
   expect_true(gene@id != mutated@id)
   expect_identical(gene@stockData, mutated@stockData)
   expect_identical(gene@stockName, mutated@stockName)
@@ -247,7 +250,7 @@ test_that("mutateGenePart timespan", {
     value = -0.2
   )
 
-  mutated <- mutateGenePart(gene, 3)
+  mutated <- mutateGenePart(gene, 2)
   expect_true(gene@id != mutated@id)
   expect_identical(gene@stockData, mutated@stockData)
   expect_identical(gene@stockName, mutated@stockName)
@@ -269,7 +272,7 @@ test_that("mutateGenePart aggregator", {
     value = -0.2
   )
 
-  mutated <- mutateGenePart(gene, 4)
+  mutated <- mutateGenePart(gene, 3)
   expect_true(gene@id != mutated@id)
   expect_identical(gene@stockData, mutated@stockData)
   expect_identical(gene@stockName, mutated@stockName)
@@ -325,8 +328,30 @@ test_that("mutateGenePart value", {
 })
 
 test_that("gpw.mutate happy day", {
+  dataFrame <- data.frame(
+    symbol = c('11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05')
+    ),
+    timespan = c(2L, 2L, 3L, 3L, 2L, 2L, 3L, 3L),
+    prc_open = as.numeric(c(1:8)),
+    volume = as.numeric(c(1:8)),
+    prc_close = as.numeric(c(1:8)),
+    prc_min = as.numeric(c(1:8)),
+    prc_max = as.numeric(c(1:8)),
+    stringsAsFactors = FALSE
+  )
+
+  dataImport <- as.gpw.import(dataFrame)
   gene <- as.gpw.gene(
-    stockData = getTestDataMutation(),
+    stockData = as.gpw.relative(dataImport),
     stockName = '11BIT',
     pastRelativeTimePos = 1L,
     aggregationTimespan = 2L,

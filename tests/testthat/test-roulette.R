@@ -41,9 +41,8 @@ test_that("spin last", {
 })
 
 test_that("spin components", {
-  components <- c(1, 3, 6)
   value <- gpw.spin(c(1, 3, 6))
-  expect_true(value %in% components, paste('Got value', str(value)))
+  expect_true(value %in% c(1:3), paste('Got value:', str(value)))
 })
 
 test_that("gpw.randomInteger bottom", {

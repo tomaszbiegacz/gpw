@@ -15,6 +15,10 @@ getAggregators <- function () {
   )
 }
 
+gpw.getPriceCloseRelative <- function (record) {
+  record[['prc_close_rel']]
+}
+
 operatorEquals <- function (x, y, allowedDiff) {
   if (missing(allowedDiff)) {
     validDiff <- 0.01
@@ -78,6 +82,11 @@ setValidity("gpw.gene", function (object) {
     msg <- paste('unknown operator:', object@operator)
   }
 
+  if (isValid && nrow(object@stockRecords) == 0) {
+    isValid <- FALSE
+    msg <- paste('stockRecords is empty')
+  }
+
   if (isValid) TRUE else msg
 })
 
@@ -86,7 +95,7 @@ setMethod("stockRecords", "gpw.gene", function (x) x@stockRecords)
 setMethod("as.character",
           "gpw.gene",
           function(x) paste(
-            x@stockName, 'with', x@aggregator, x@operator, x@value, 
+            x@stockName, 'with', x@aggregator, x@operator, x@value,
             'over (', x@pastRelativeTimePos, 'timepos and', x@timespan, 'timespan', ')'
             )
 )
@@ -104,16 +113,18 @@ setMethod("as.gpw.gene",
               recordValue <- record[[aggregator]]
               aggregationOperator(recordValue, value)
             }
+            stockRecords <- subset(stockData, symbol == stockName & timespan == aggregationTimespan)
+
             gpw.gene(
               id = uuid::UUIDgenerate(),
               stockData = stockData,
               stockName = stockName,
+              pastRelativeTimePos = pastRelativeTimePos,
               timespan = aggregationTimespan,
               aggregator = aggregator,
-              pastRelativeTimePos = pastRelativeTimePos,
               operator = operator,
               value = value,
-              stockRecords = subset(stockData, symbol == stockName & timespan == aggregationTimespan),
+              stockRecords = stockRecords,
               isEnabledForRecord = isEnabledForRecordFunction
             )
           })
@@ -184,16 +195,19 @@ mutateNumericPositive <- function (currentValue, valueShift)
   max(0, currentValue + shift)
 }
 
-mutateInteger <- function (maxValue, currentValue, valueShift)
+mutateInteger <- function (valueRange, currentValue, valueShift)
 {
   shift <- if(missing(valueShift)) max(1, rnorm(1, sd = max(3, currentValue))) else valueShift
-  as.integer(min(maxValue, max(1, as.integer(round(currentValue + shift)))))
+  as.integer(min(valueRange[2], max(valueRange[1], as.integer(round(currentValue + shift)))))
 }
 
+# signature
 GENE_STOCK_NAME = 1
-GENE_TIMESTAMP = 2
-GENE_TIMESPAN = 3
-GENE_AGGREGATOR = 4
+GENE_TIMESPAN = 2
+GENE_AGGREGATOR = 3
+
+# value
+GENE_TIMESTAMP = 4
 GENE_OPERATOR = 5
 GENE_VALUE = 6
 
@@ -206,9 +220,9 @@ mutateGenePart <- function (x, partToMutate) {
   stockName <- if (partToMutate == GENE_STOCK_NAME)
     mutateName(gpw.getValidSymbols(x@stockData), x@stockName) else x@stockName
   pastRelativeTimePos <- if (partToMutate == GENE_TIMESTAMP)
-    mutateInteger(gpw.getTimestampPosRange(x@stockData)[2], x@pastRelativeTimePos) else x@pastRelativeTimePos
+    mutateInteger(gpw.getTimestampPosRange(x@stockData), x@pastRelativeTimePos) else x@pastRelativeTimePos
   timespan <- if (partToMutate == GENE_TIMESPAN)
-    mutateInteger(max(gpw.getValidTimespans(x@stockData)), x@timespan) else x@timespan
+    mutateName(gpw.getValidTimespans(x@stockData), x@timespan) else x@timespan
   aggregator <- if (partToMutate == GENE_AGGREGATOR)
     mutateName(getAggregators(), x@aggregator) else x@aggregator
   operator <- if (partToMutate == GENE_OPERATOR)
