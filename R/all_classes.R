@@ -165,10 +165,6 @@ setGeneric("gpw.getFitness", function(x, timestampPos,...) {
   standardGeneric("gpw.getFitness")
 }, signature = c('x'))
 
-setGeneric("gpw.mutate", function(x, mutationRate, ...) {
-  standardGeneric("gpw.mutate")
-}, signature = c('x'))
-
 setGeneric("gpw.crossover", function(x, y, crossoverRate, ...) {
   standardGeneric("gpw.crossover")
 }, signature = c('x'))

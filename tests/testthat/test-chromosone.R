@@ -278,3 +278,42 @@ test_that("gpw.getFitness disabled", {
   expect_equal(gpw.getFitness(chromosone, 2), 0)
 })
 
+test_that("gpw.mutate happy day", {
+  dataFrame <- data.frame(
+    symbol = c('11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05')
+    ),
+    timespan = c(2L, 2L, 3L, 3L, 2L, 2L, 3L, 3L),
+    prc_open = as.numeric(c(1:8)),
+    volume = as.numeric(c(1:8)),
+    prc_close = as.numeric(c(1:8)),
+    prc_min = as.numeric(c(1:8)),
+    prc_max = as.numeric(c(1:8)),
+    stringsAsFactors = FALSE
+  )
+
+  dataImport <- as.gpw.import(dataFrame)
+  chromosone <- as.gpw.chromosone(
+    stockData = as.gpw.relative(dataImport),
+    stockName = '11BIT',
+    futureRelativeTimePos = 2L,
+    isOptimistic = TRUE
+  )
+
+  mutated <- gpw.mutate(chromosone, 0.2)
+  expect_true(inherits(mutated, 'gpw.chromosone'))
+  expect_true(chromosone@id != mutated@id)
+  expect_identical(chromosone@stockData, mutated@stockData)
+  expect_identical(chromosone@stockName, mutated@stockName)
+  expect_identical(chromosone@futureRelativeTimePos, mutated@futureRelativeTimePos)
+  expect_identical(chromosone@isOptimistic, mutated@isOptimistic)
+})
+

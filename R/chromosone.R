@@ -70,6 +70,7 @@ setMethod("as.gpw.chromosone",
             stockRecords <- subset(stockData, symbol == stockName & timespan == futureRelativeTimePos)
 
             gpw.chromosone(
+              id = uuid::UUIDgenerate(),
               stockData = stockData,
               stockName = stockName,
               futureRelativeTimePos = futureRelativeTimePos,
@@ -96,4 +97,32 @@ setMethod("gpw.getFitness",
             if (isEnabled) (
               if (x@isOptimistic) value else -1 * value
             ) else 0
+          })
+
+setMethod("gpw.getFitness",
+          c(x = "gpw.chromosone"),
+          function (x, timestampPos) {
+            record <- subset(x@stockRecords, timestamp_pos ==  as.integer(timestampPos))
+            if (nrow(record) == 0) stop(paste('Invalid timestampPos:', timestampPos, 'valid ones:', x@stockRecords$timestamp_pos))
+
+            isEnabled <- all(vapply(x@gene, function (x) gpw.isEnabled(x, timestampPos), TRUE))
+            value <- gpw.getPriceCloseRelative(record)
+            if (isEnabled) (
+              if (x@isOptimistic) value else -1 * value
+            ) else 0
+          })
+
+setMethod("gpw.mutate",
+          c(x = "gpw.chromosone"),
+          function(x, mutationRate) {
+            geneList <- lapply(x@gene, function (g) if (mutationRate >= runif(1)) gpw.mutate(g, mutationRate) else g)
+            gpw.chromosone(
+              id = uuid::UUIDgenerate(),
+              stockData = x@stockData,
+              stockName = x@stockName,
+              futureRelativeTimePos = x@futureRelativeTimePos,
+              isOptimistic = x@isOptimistic,
+              gene = gpw.geneList(listData = normalizeGeneList(geneList)),
+              stockRecords = x@stockRecords
+            )
           })
