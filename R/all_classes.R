@@ -58,7 +58,7 @@ gpw.geneList = setClass("gpw.geneList",
                   prototype = prototype(elementType="gpw.gene")
                 )
 
-gpw.chromosone <- setClass('gpw.chromosone',
+gpw.chromosome <- setClass('gpw.chromosome',
                            representation(
                              id = 'character',                           # UUID
                              stockData = 'gpw.relative',
@@ -151,10 +151,10 @@ setGeneric("gpw.mutate", function(x, mutationRate, ...) {
   standardGeneric("gpw.mutate")
 }, signature = c('x'))
 
-# gpw.chromosone
+# gpw.chromosome
 
-setGeneric("as.gpw.chromosone", function(stockData, stockName, futureRelativeTimePos, isOptimistic, genesCount, valueSdPerOperator, ...) {
-  standardGeneric("as.gpw.chromosone")
+setGeneric("as.gpw.chromosome", function(stockData, stockName, futureRelativeTimePos, isOptimistic, genesCount, valueSdPerOperator, ...) {
+  standardGeneric("as.gpw.chromosome")
 }, signature = c('stockData'))
 
 setGeneric("gpw.isTheSameSpiece", function(x, y, ...) {

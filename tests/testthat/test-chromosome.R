@@ -1,4 +1,4 @@
-context("chromosone")
+context("chromosome")
 
 getTestDataBasic <- function () {
   dataFrame <- data.frame(
@@ -19,20 +19,20 @@ getTestDataBasic <- function () {
   as.gpw.relative(dataImport)
 }
 
-test_that("as.gpw.chromosone happy day", {
-  result <- as.gpw.chromosone(
+test_that("as.gpw.chromosome happy day", {
+  result <- as.gpw.chromosome(
     stockData = getTestDataBasic(),
     stockName = '11BIT',
     futureRelativeTimePos = 2L,
     isOptimistic = TRUE
   )
 
-  expect_identical(class(result)[1], 'gpw.chromosone')
+  expect_identical(class(result)[1], 'gpw.chromosome')
   expect_true(length(result) >= 1L)
 })
 
-test_that("as.gpw.chromosone mocked", {
-  result <- as.gpw.chromosone(
+test_that("as.gpw.chromosome mocked", {
+  result <- as.gpw.chromosome(
     stockData = getTestDataBasic(),
     stockName = '11BIT',
     futureRelativeTimePos = 2L,
@@ -127,7 +127,7 @@ test_that("gpw.isTheSameSpiece happy day", {
   dataImport <- as.gpw.import(dataFrame)
   stockData <- as.gpw.relative(dataImport)
 
-  arg <- as.gpw.chromosone(
+  arg <- as.gpw.chromosome(
     stockData = stockData,
     stockName = '11BIT',
     futureRelativeTimePos = 1L,
@@ -136,20 +136,20 @@ test_that("gpw.isTheSameSpiece happy day", {
     normalizeGeneFunc = function (x) x
   )
 
-  expect_true(gpw.isTheSameSpiece(arg, as.gpw.chromosone(
+  expect_true(gpw.isTheSameSpiece(arg, as.gpw.chromosome(
     stockData = stockData,
     stockName = '11BIT',
     futureRelativeTimePos = 1L,
     isOptimistic = FALSE
   )))
 
-  expect_false(gpw.isTheSameSpiece(arg, as.gpw.chromosone(
+  expect_false(gpw.isTheSameSpiece(arg, as.gpw.chromosome(
     stockData = stockData,
     stockName = '11BIT',
     futureRelativeTimePos = 2L,
     isOptimistic = TRUE
   )))
-  expect_false(gpw.isTheSameSpiece(arg, as.gpw.chromosone(
+  expect_false(gpw.isTheSameSpiece(arg, as.gpw.chromosome(
     stockData = stockData,
     stockName = 'ABCD',
     futureRelativeTimePos = 1L,
@@ -210,7 +210,7 @@ test_that("gpw.getFitness enabled positive", {
     operator = '<',
     value = -0.1
   )
-  chromosone <- as.gpw.chromosone(
+  chromosome <- as.gpw.chromosome(
     stockData = stockData,
     stockName = '11BIT',
     futureRelativeTimePos = 2L,
@@ -219,7 +219,7 @@ test_that("gpw.getFitness enabled positive", {
   )
 
   expect_true(gpw.isEnabled(gene1, 2))
-  expect_equal(gpw.getFitness(chromosone, 2), 0.2)
+  expect_equal(gpw.getFitness(chromosome, 2), 0.2)
 })
 
 test_that("gpw.getFitness enabled negative", {
@@ -233,7 +233,7 @@ test_that("gpw.getFitness enabled negative", {
     operator = '<',
     value = -0.1
   )
-  chromosone <- as.gpw.chromosone(
+  chromosome <- as.gpw.chromosome(
     stockData = stockData,
     stockName = '11BIT',
     futureRelativeTimePos = 2L,
@@ -242,7 +242,7 @@ test_that("gpw.getFitness enabled negative", {
   )
 
   expect_true(gpw.isEnabled(gene1, 2))
-  expect_equal(gpw.getFitness(chromosone, 2), -0.2)
+  expect_equal(gpw.getFitness(chromosome, 2), -0.2)
 })
 
 test_that("gpw.getFitness disabled", {
@@ -265,7 +265,7 @@ test_that("gpw.getFitness disabled", {
     operator = '>',
     value = -0.1
   )
-  chromosone <- as.gpw.chromosone(
+  chromosome <- as.gpw.chromosome(
     stockData = stockData,
     stockName = '11BIT',
     futureRelativeTimePos = 2L,
@@ -275,7 +275,7 @@ test_that("gpw.getFitness disabled", {
 
   expect_true(gpw.isEnabled(gene1, 2))
   expect_false(gpw.isEnabled(gene2, 2))
-  expect_equal(gpw.getFitness(chromosone, 2), 0)
+  expect_equal(gpw.getFitness(chromosome, 2), 0)
 })
 
 test_that("gpw.mutate happy day", {
@@ -301,19 +301,19 @@ test_that("gpw.mutate happy day", {
   )
 
   dataImport <- as.gpw.import(dataFrame)
-  chromosone <- as.gpw.chromosone(
+  chromosome <- as.gpw.chromosome(
     stockData = as.gpw.relative(dataImport),
     stockName = '11BIT',
     futureRelativeTimePos = 2L,
     isOptimistic = TRUE
   )
 
-  mutated <- gpw.mutate(chromosone, 0.2)
-  expect_true(inherits(mutated, 'gpw.chromosone'))
-  expect_true(chromosone@id != mutated@id)
-  expect_identical(chromosone@stockData, mutated@stockData)
-  expect_identical(chromosone@stockName, mutated@stockName)
-  expect_identical(chromosone@futureRelativeTimePos, mutated@futureRelativeTimePos)
-  expect_identical(chromosone@isOptimistic, mutated@isOptimistic)
+  mutated <- gpw.mutate(chromosome, 0.2)
+  expect_true(inherits(mutated, 'gpw.chromosome'))
+  expect_true(chromosome@id != mutated@id)
+  expect_identical(chromosome@stockData, mutated@stockData)
+  expect_identical(chromosome@stockName, mutated@stockName)
+  expect_identical(chromosome@futureRelativeTimePos, mutated@futureRelativeTimePos)
+  expect_identical(chromosome@isOptimistic, mutated@isOptimistic)
 })
 
