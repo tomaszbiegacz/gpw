@@ -102,7 +102,7 @@ setMethod("as.character",
 
 setMethod("show", "gpw.gene", function(object) cat(as.character(object)))
 
-setMethod("signature", "gpw.gene", function(x) paste(x@stockName, x@timespan, x@aggregator, sep='|'))
+setMethod("gpw.signature", "gpw.gene", function(x) paste(x@stockName, x@timespan, x@aggregator, sep='|'))
 
 setMethod("as.gpw.gene",
           c(stockData = "gpw.relative"),
@@ -144,7 +144,7 @@ setMethod("gpw.randomGene",
           function (stockData, valueSdPerOperator) {
             selectedAggregator <- gpw.randomItem(getAggregators())
             medians <- if (missing(valueSdPerOperator)) gpw.geneAggregatorAbsMedian(stockData) else valueSdPerOperator
-            aggregatorMedian <- medians[[selectedAggregator]]
+            aggregatorMedian <- max(0.5, medians[[selectedAggregator]])
             as.gpw.gene(
               stockData = stockData,
               stockName = gpw.randomItem(gpw.getValidSymbols(stockData)),
@@ -255,3 +255,26 @@ setMethod("gpw.mutate",
               x
           })
 
+setMethod("gpw.crossover",
+          c(x = "gpw.gene", y = "gpw.gene"),
+          function(x, y) {
+            if (!identical(x@stockData, y@stockData)) stop("Stock data are not equal")
+
+            xSignature <- gpw.signature(x)
+            ySignature <- gpw.signature(y)
+            if (xSignature != ySignature) stop(paste("Not equal signatures:", xSignature, ySignature))
+
+            as.gpw.gene(
+              stockData = x@stockData,
+
+              # signature
+              stockName = x@stockName,
+              aggregationTimespan = x@timespan,
+              aggregator = x@aggregator,
+
+              # values
+              pastRelativeTimePos = as.integer(round(mean(c(x@pastRelativeTimePos, y@pastRelativeTimePos)))),
+              operator = gpw.randomItem(c(x@operator, y@operator)),
+              value = mean(c(x@value, y@value))
+            )
+          })

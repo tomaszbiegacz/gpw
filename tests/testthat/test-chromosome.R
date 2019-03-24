@@ -317,3 +317,98 @@ test_that("gpw.mutate happy day", {
   expect_identical(chromosome@isOptimistic, mutated@isOptimistic)
 })
 
+
+
+test_that("gpw.crossover empty", {
+  dataFrame <- data.frame(
+    symbol = c('11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05')
+    ),
+    timespan = c(2L, 2L, 3L, 3L, 2L, 2L, 3L, 3L),
+    prc_open = as.numeric(c(1:8)),
+    volume = as.numeric(c(1:8)),
+    prc_close = as.numeric(c(1:8)),
+    prc_min = as.numeric(c(1:8)),
+    prc_max = as.numeric(c(1:8)),
+    stringsAsFactors = FALSE
+  )
+
+  dataImport <- as.gpw.import(dataFrame)
+  stockData <- as.gpw.relative(dataImport)
+  chromosome1 <- as.gpw.chromosome(
+    stockData = stockData,
+    stockName = '11BIT',
+    futureRelativeTimePos = 2L,
+    isOptimistic = TRUE
+  )
+  chromosome2 <- as.gpw.chromosome(
+    stockData = stockData,
+    stockName = 'ABCD',
+    futureRelativeTimePos = 3L,
+    isOptimistic = FALSE
+  )
+
+  result <- gpw.crossover(chromosome1, chromosome2, crossoverRate = 0.3, randomNumberGenerator = (function () 0.4))
+  expect_identical(length(result), 0L)
+})
+
+test_that("gpw.crossover happy day", {
+  dataFrame <- data.frame(
+    symbol = c('11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05')
+    ),
+    timespan = c(2L, 2L, 3L, 3L, 2L, 2L, 3L, 3L),
+    prc_open = as.numeric(c(1:8)),
+    volume = as.numeric(c(1:8)),
+    prc_close = as.numeric(c(1:8)),
+    prc_min = as.numeric(c(1:8)),
+    prc_max = as.numeric(c(1:8)),
+    stringsAsFactors = FALSE
+  )
+
+  dataImport <- as.gpw.import(dataFrame)
+  stockData <- as.gpw.relative(dataImport)
+  chromosome1 <- as.gpw.chromosome(
+    stockData = stockData,
+    stockName = '11BIT',
+    futureRelativeTimePos = 2L,
+    isOptimistic = TRUE
+  )
+  chromosome2 <- as.gpw.chromosome(
+    stockData = stockData,
+    stockName = 'ABCD',
+    futureRelativeTimePos = 3L,
+    isOptimistic = FALSE
+  )
+
+  result <- gpw.crossover(chromosome1, chromosome2, crossoverRate = 0.5, randomNumberGenerator = (function () 0.4))
+  expect_identical(length(result), 2L)
+
+  expect_identical(result[[1]]@stockData, stockData)
+  expect_identical(result[[1]]@stockName, chromosome1@stockName)
+  expect_identical(result[[1]]@futureRelativeTimePos, chromosome1@futureRelativeTimePos)
+  expect_identical(result[[1]]@isOptimistic, chromosome1@isOptimistic)
+
+  expect_identical(result[[2]]@stockData, stockData)
+  expect_identical(result[[2]]@stockName, chromosome2@stockName)
+  expect_identical(result[[2]]@futureRelativeTimePos, chromosome2@futureRelativeTimePos)
+  expect_identical(result[[2]]@isOptimistic, chromosome2@isOptimistic)
+
+  expect_identical(result[[1]]@gene, result[[2]]@gene)
+})

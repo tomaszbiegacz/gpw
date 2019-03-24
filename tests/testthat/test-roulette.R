@@ -48,7 +48,7 @@ test_that("spin components", {
 test_that("gpw.randomInteger bottom", {
   runifMock <- function(max) {
     expect_identical(max, 10L)
-    0.1
+    1.1
   }
 
   value <- gpw.randomInteger(10L, randomNumberGenerator = runifMock)
@@ -62,5 +62,5 @@ test_that("gpw.randomInteger top", {
   }
 
   value <- gpw.randomInteger(10L, randomNumberGenerator = runifMock)
-  expect_identical(value, 10L)
+  expect_identical(value, 9L)
 })

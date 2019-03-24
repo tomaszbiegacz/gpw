@@ -46,10 +46,10 @@ setMethod("show", "gpw.chromosome", function(object) cat(as.character(object)))
 setMethod("length", "gpw.chromosome", function(x) length(x@gene))
 
 normalizeGeneList <- function (geneList) {
-  usedNames = c()
-  resultMap = c()
+  usedNames = NULL
+  resultMap = NULL
   for (gene in geneList) {
-    geneSignature <- signature(gene)
+    geneSignature <- gpw.signature(gene)
     precedense <- geneSignature %!in% usedNames
     resultMap <- c(resultMap, precedense)
     if (precedense) {
@@ -83,7 +83,7 @@ setMethod("as.gpw.chromosome",
 setMethod("gpw.isTheSameSpiece",
           c(x = "gpw.chromosome", y = "gpw.chromosome"),
           function (x, y) {
-            x@stockName == y@stockName & x@futureRelativeTimePos == y@futureRelativeTimePos
+            x@stockName == y@stockName && x@futureRelativeTimePos == y@futureRelativeTimePos
           })
 
 setMethod("gpw.getFitness",
@@ -128,18 +128,42 @@ setMethod("gpw.mutate",
           })
 
 chromosomalCrossover <- function(x, y) {
-  x
+  geneCrossover <- as.gpw.geneCrossover(x@gene, y@gene)
+  geneReproduction <- gpw.reproduce(geneCrossover)
+  geneList <- gpw.geneList(listData = normalizeGeneList(geneReproduction@listData))
+
+  xChromosome <- gpw.chromosome(
+    id = uuid::UUIDgenerate(),
+    stockData = x@stockData,
+    stockName = x@stockName,
+    futureRelativeTimePos = x@futureRelativeTimePos,
+    isOptimistic = x@isOptimistic,
+    gene = geneList,
+    stockRecords = x@stockRecords
+  )
+
+  yChromosome <- gpw.chromosome(
+    id = uuid::UUIDgenerate(),
+    stockData = y@stockData,
+    stockName = y@stockName,
+    futureRelativeTimePos = y@futureRelativeTimePos,
+    isOptimistic = y@isOptimistic,
+    gene = geneList,
+    stockRecords = y@stockRecords
+  )
+
+  gpw.chromosomeList(listData = list(xChromosome, yChromosome))
 }
 
 setMethod("gpw.crossover",
-          c(x = "gpw.chromosome"),
+          c(x = "gpw.chromosome", y = "gpw.chromosome"),
           function(x, y, crossoverRate, randomNumberGenerator) {
             if (missing(randomNumberGenerator))
               selectedNumber <- runif(1)
             else
               selectedNumber <- randomNumberGenerator()
 
-            if (mutationRate >= selectedNumber)
+            if (crossoverRate >= selectedNumber)
               chromosomalCrossover(x, y)
             else
               NULL

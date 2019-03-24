@@ -6,6 +6,7 @@ library(S4Vectors)
 #
 
 PHI <- 1.618
+NEW_LINE <- '\n'
 
 #
 # Operators
@@ -55,8 +56,16 @@ gpw.gene <- setClass('gpw.gene',
 
 gpw.geneList = setClass("gpw.geneList",
                   contains = "SimpleList",
-                  prototype = prototype(elementType="gpw.gene")
-                )
+                  prototype = prototype(elementType="gpw.gene"))
+
+gpw.geneCrossover <- setClass('gpw.geneCrossover',
+                              representation(
+                                xCommon = 'gpw.geneList',
+                                xOther = 'gpw.geneList',
+
+                                yCommon = 'gpw.geneList',
+                                yOther = 'gpw.geneList'
+                              ))
 
 gpw.chromosome <- setClass('gpw.chromosome',
                            representation(
@@ -75,13 +84,17 @@ gpw.chromosome <- setClass('gpw.chromosome',
                              stockRecords = "data.frame"
                            ))
 
+gpw.chromosomeList = setClass("gpw.chromosomeList",
+                              contains = "SimpleList",
+                              prototype = prototype(elementType="gpw.chromosome"))
+
 #
 # Generics
 #
 
 setGeneric("stockRecords", function(x) standardGeneric("stockRecords"))
 
-setGeneric("signature", function(x) standardGeneric("signature"))
+setGeneric("gpw.signature", function(x) standardGeneric("gpw.signature"))
 
 # gpw.import
 
@@ -151,6 +164,20 @@ setGeneric("gpw.mutate", function(x, mutationRate, ...) {
   standardGeneric("gpw.mutate")
 }, signature = c('x'))
 
+setGeneric("gpw.crossover", function(x, y, crossoverRate, ...) {
+  standardGeneric("gpw.crossover")
+}, signature = c('x', 'y'))
+
+# gpw.geneCrossover
+
+setGeneric("as.gpw.geneCrossover", function(x, y, ...) {
+  standardGeneric("as.gpw.geneCrossover")
+}, signature = c('x', 'y'))
+
+setGeneric("gpw.reproduce", function(x, ...) {
+  standardGeneric("gpw.reproduce")
+}, signature = c('x'))
+
 # gpw.chromosome
 
 setGeneric("as.gpw.chromosome", function(stockData, stockName, futureRelativeTimePos, isOptimistic, genesCount, valueSdPerOperator, ...) {
@@ -165,6 +192,3 @@ setGeneric("gpw.getFitness", function(x, timestampPos,...) {
   standardGeneric("gpw.getFitness")
 }, signature = c('x'))
 
-setGeneric("gpw.crossover", function(x, y, crossoverRate, ...) {
-  standardGeneric("gpw.crossover")
-}, signature = c('x'))

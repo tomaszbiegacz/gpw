@@ -108,7 +108,7 @@ test_that("gpw.gene validation happy day", {
   expect_identical(class(data)[1], 'gpw.gene')
   expect_true(gpw.isEnabled(data, 2))
   expect_identical(as.character(data), '11BIT with prc_close_rel > 0.1 over ( 1 timepos and 2 timespan )')
-  expect_identical(signature(data), '11BIT|2|prc_close_rel')
+  expect_identical(gpw.signature(data), '11BIT|2|prc_close_rel')
 
   # resiliency
   expect_false(gpw.isEnabled(data, 3))
@@ -369,7 +369,78 @@ test_that("gpw.mutate happy day", {
 })
 
 test_that("gpw.randomGene happy day", {
-  result <- gpw.randomGene(getTestDataMutation())
+  dataFrame <- data.frame(
+    symbol = c('11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD', '11BIT', 'ABCD'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05'),
+      as.POSIXct('2016-01-05')
+    ),
+    timespan = c(2L, 2L, 3L, 3L, 2L, 2L, 3L, 3L),
+    prc_open = as.numeric(c(1:8)),
+    volume = as.numeric(c(1:8)),
+    prc_close = as.numeric(c(1:8)),
+    prc_min = as.numeric(c(1:8)),
+    prc_max = as.numeric(c(1:8)),
+    stringsAsFactors = FALSE
+  )
+
+  dataImport <- as.gpw.import(dataFrame)
+  stockData <- as.gpw.relative(dataImport)
+
+  result <- gpw.randomGene(stockData)
   expect_true(inherits(result, 'gpw.gene'))
 })
 
+test_that("gpw.mutate happy day", {
+  dataFrame <- data.frame(
+    symbol = c('11BIT', 'ABCD'),
+    timestamp = c(
+      as.POSIXct('2016-01-04'),
+      as.POSIXct('2016-01-05')
+    ),
+    timespan = c(2L, 3L),
+    prc_open = as.numeric(c(1:2)),
+    volume = as.numeric(c(1:2)),
+    prc_close = as.numeric(c(1:2)),
+    prc_min = as.numeric(c(1:2)),
+    prc_max = as.numeric(c(1:2)),
+    stringsAsFactors = FALSE
+  )
+  dataImport <- as.gpw.import(dataFrame)
+  stockData <- as.gpw.relative(dataImport)
+
+  gene1 <- as.gpw.gene(
+    stockData = stockData,
+    stockName = '11BIT',
+    aggregationTimespan = 2L,
+    aggregator = 'prc_min_rel',
+    pastRelativeTimePos = 1L,
+    operator = '<',
+    value = -1
+  )
+  gene2 <- as.gpw.gene(
+    stockData = stockData,
+    stockName = '11BIT',
+    aggregationTimespan = 2L,
+    aggregator = 'prc_min_rel',
+    pastRelativeTimePos = 2L,
+    operator = '>',
+    value = 2
+  )
+
+  replicated <- gpw.crossover(gene1, gene2)
+
+  expect_identical(replicated@stockData, stockData)
+  expect_identical(replicated@timespan, 2L)
+  expect_identical(replicated@aggregator, 'prc_min_rel')
+
+  expect_identical(replicated@pastRelativeTimePos, 2L)
+  expect_true('<' %in% c('<','>'))
+  expect_identical(replicated@value, 0.5)
+})

@@ -8,7 +8,7 @@ gpw.randomInteger <- function (maxValue, randomNumberGenerator)
   else
     selectedNumber <- randomNumberGenerator(maxValue)
 
-  as.integer(ceiling(selectedNumber))
+  as.integer(round(selectedNumber))
 }
 
 gpw.randomItem <- function(items)
