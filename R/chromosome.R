@@ -21,7 +21,12 @@ setValidity("gpw.chromosome", function (object) {
 
   if (isValid && length(object@gene) < 1) {
     isValid <- FALSE
-    msg <- paste('invalid gene:', str(object@gene))
+    msg <- paste('Empty gene')
+  }
+
+  if (isValid && !all(vapply(object@gene, function (x) identical(x@stockData, object@stockData), FALSE))) {
+    isValid <- FALSE
+    msg <- paste('mixed stock data')
   }
 
   if (isValid && nrow(object@stockRecords) == 0) {
@@ -84,19 +89,6 @@ setMethod("gpw.isTheSameSpiece",
           c(x = "gpw.chromosome", y = "gpw.chromosome"),
           function (x, y) {
             x@stockName == y@stockName && x@futureRelativeTimePos == y@futureRelativeTimePos
-          })
-
-setMethod("gpw.getFitness",
-          c(x = "gpw.chromosome"),
-          function (x, timestampPos) {
-            record <- subset(x@stockRecords, timestamp_pos ==  as.integer(timestampPos))
-            if (nrow(record) == 0) stop(paste('Invalid timestampPos:', timestampPos, 'valid ones:', x@stockRecords$timestamp_pos))
-
-            isEnabled <- all(vapply(x@gene, function (x) gpw.isEnabled(x, timestampPos), TRUE))
-            value <- gpw.getPriceCloseRelative(record)
-            if (isEnabled) (
-              if (x@isOptimistic) value else -1 * value
-            ) else 0
           })
 
 setMethod("gpw.getFitness",

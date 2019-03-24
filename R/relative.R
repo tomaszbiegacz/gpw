@@ -154,7 +154,7 @@ setMethod("gpw.getTimestampPosRange",
 setMethod("gpw.getTimestampPosLength",
           c(x = "gpw.relative"),
           function (x) {
-            x@validTimestampsPosRange[2] - x@validTimestampsPosRange[1] + 1
+            x@validTimestampsPosRange[2] - x@validTimestampsPosRange[1] + 1L
           })
 
 setMethod("gpw.getTimestampFromPos",

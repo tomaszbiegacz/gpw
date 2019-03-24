@@ -18,75 +18,127 @@ NEW_LINE <- '\n'
 # Classes
 #
 
-gpw.import <- setClass("gpw.import",
-                        contains = "data.frame")
+gpw.import <- setClass(
+  "gpw.import",
+  contains = "data.frame"
+)
 
-gpw.relative <- setClass("gpw.relative",
-                          contains = "data.frame",
-                          representation(
-                            validTimestamps = "POSIXct",
-                            validTimestampsPosRange = "integer",
-                            validTimespans = "integer"
-                          ))
+gpw.relative <- setClass(
+  "gpw.relative",
+  contains = "data.frame",
+  representation(
+    validTimestamps = "POSIXct",
+    validTimestampsPosRange = "integer",
+    validTimespans = "integer"
+  )
+)
 
-gpw.roulette <- setClass('gpw.roulette',
-                         representation(
-                           valueSlot = 'numeric'
-                         ))
+gpw.roulette <- setClass(
+  'gpw.roulette',
+   representation(
+     valueSlot = 'numeric'
+   )
+)
 
-gpw.gene <- setClass('gpw.gene',
-                      representation(
-                        id = 'character',                                # UUID
-                        stockData = 'gpw.relative',
+gpw.rouletteWithoutReturn <- setRefClass(
+  'gpw.rouletteWithoutReturn',
+  fields = list(
+    roulette = 'gpw.roulette',
+    ids = 'character',
+    components = 'numeric',
+    usedPositions = 'integer'
+  )
+)
 
-                        # signature
-                        stockName = 'character',
-                        timespan = 'integer',                            # > 0
-                        aggregator = 'character',
+gpw.gene <- setClass(
+  'gpw.gene',
+  representation(
+    id = 'character',                                # UUID
+    stockData = 'gpw.relative',
 
-                        # value
-                        pastRelativeTimePos = 'integer',                 # > 0
-                        operator = 'character',
-                        value = 'numeric',
+    # signature
+    stockName = 'character',
+    timespan = 'integer',                            # > 0
+    aggregator = 'character',
 
-                        # cache
-                        stockRecords = "data.frame",
-                        isEnabledForRecord = "function"
-                      ))
+    # value
+    pastRelativeTimePos = 'integer',                 # > 0
+    operator = 'character',
+    value = 'numeric',
 
-gpw.geneList = setClass("gpw.geneList",
-                  contains = "SimpleList",
-                  prototype = prototype(elementType="gpw.gene"))
+    # cache
+    stockRecords = "data.frame",
+    isEnabledForRecord = "function"
+  )
+)
 
-gpw.geneCrossover <- setClass('gpw.geneCrossover',
-                              representation(
-                                xCommon = 'gpw.geneList',
-                                xOther = 'gpw.geneList',
+gpw.geneList = setClass(
+  "gpw.geneList",
+  contains = "SimpleList",
+  prototype = prototype(elementType="gpw.gene")
+)
 
-                                yCommon = 'gpw.geneList',
-                                yOther = 'gpw.geneList'
-                              ))
+gpw.geneCrossover <- setClass(
+  'gpw.geneCrossover',
+  representation(
+    xCommon = 'gpw.geneList',
+    xOther = 'gpw.geneList',
 
-gpw.chromosome <- setClass('gpw.chromosome',
-                           representation(
-                             id = 'character',                           # UUID
-                             stockData = 'gpw.relative',
+    yCommon = 'gpw.geneList',
+    yOther = 'gpw.geneList'
+  )
+)
 
-                             # fitness
-                             stockName = 'character',
-                             futureRelativeTimePos = 'integer',          # > 0
-                             isOptimistic = 'logical',
+gpw.chromosome <- setClass(
+  'gpw.chromosome',
+  representation(
+    id = 'character',                           # UUID
+    stockData = 'gpw.relative',
 
-                             # activation
-                             gene = 'gpw.geneList',
+    # fitness
+    stockName = 'character',
+    futureRelativeTimePos = 'integer',          # > 0
+    isOptimistic = 'logical',
 
-                             # cache
-                             stockRecords = "data.frame"
-                           ))
+    # activation
+    gene = 'gpw.geneList',
 
-gpw.chromosomeList = setClass("gpw.chromosomeList",
-                              contains = "SimpleList",
-                              prototype = prototype(elementType="gpw.chromosome"))
+    # cache
+    stockRecords = "data.frame"
+ )
+)
+
+gpw.chromosomeList = setClass(
+  "gpw.chromosomeList",
+  contains = "SimpleList",
+  prototype = prototype(elementType="gpw.chromosome")
+)
+
+gpw.spiece <- setClass(
+  'gpw.spiece',
+  representation(
+    id = 'character',                           # UUID
+    stockData = 'gpw.relative',
+    stockName = 'character',
+    futureRelativeTimePos = 'integer',          # > 0
+    population = 'gpw.chromosomeList'
+  )
+)
+
+gpw.spieceList = setClass(
+  "gpw.spieceList",
+  contains = "SimpleList",
+  prototype = prototype(elementType="gpw.spiece")
+)
+
+gpw.population <- setClass(
+  'gpw.population',
+  representation(
+    id = 'character',                           # UUID
+    stockData = 'gpw.relative',
+    spiece = 'gpw.spieceList'
+  )
+)
 
 #
 # Generics
@@ -192,3 +244,14 @@ setGeneric("gpw.getFitness", function(x, timestampPos,...) {
   standardGeneric("gpw.getFitness")
 }, signature = c('x'))
 
+# gpw.spiece
+
+setGeneric("as.gpw.spiece", function(stockData, stockName, futureRelativeTimePos,...) {
+  standardGeneric("as.gpw.spiece")
+}, signature = c('stockData', 'stockName', 'futureRelativeTimePos'))
+
+# gpw.population
+
+setGeneric("as.gpw.population", function(stockData,...) {
+  standardGeneric("as.gpw.population")
+}, signature = c('stockData'))

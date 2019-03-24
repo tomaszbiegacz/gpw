@@ -34,7 +34,7 @@ setValidity("gpw.roulette", function (object) {
 
 gpw.rouletteWheel <- function (component) {
   if(length(component) == 0) stop('Invalid component: empty')
-  if(!(min(component) > 0)) stop('Invalid component: not positive')
+  if(!all(component > 0)) stop('Invalid component: not positive')
   componentsSum <- sum(component)
   getProbability <- function (x) x/componentsSum
   cumulatedProbabilities <- vapply(cumsum(component), getProbability, 1)
